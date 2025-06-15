@@ -1,15 +1,14 @@
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.Timer;
+import javax.swing.border.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 class CodeColaGUI extends JFrame {
     private JTextArea codeInput;
@@ -17,130 +16,182 @@ class CodeColaGUI extends JFrame {
     private JButton convertButton;
     private JButton clearButton;
     private JButton loadExampleButton;
-    private JComboBox<String> themeComboBox;
     private JLabel statusLabel;
     private JProgressBar progressBar;
     private Map<String, String> variables;
     private List<String> recipeSteps;
     
-    // Color themes
-    private static final Color DARK_BG = new Color(40, 44, 52);
-    private static final Color DARK_FG = new Color(171, 178, 191);
-    private static final Color LIGHT_BG = Color.WHITE;
-    private static final Color LIGHT_FG = Color.BLACK;
-    private static final Color ACCENT_COLOR = new Color(97, 175, 239);
+    // Minimalistic color palette
+    private static final Color BG_COLOR = new Color(250, 250, 250);
+    private static final Color PANEL_COLOR = Color.WHITE;
+    private static final Color TEXT_COLOR = new Color(33, 37, 41);
+    private static final Color SECONDARY_TEXT = new Color(108, 117, 125);
+    private static final Color BORDER_COLOR = new Color(222, 226, 230);
+    private static final Color PRIMARY_COLOR = new Color(52, 58, 64);
+    private static final Color SUCCESS_COLOR = new Color(40, 167, 69);
+    private static final Color WARNING_COLOR = new Color(255, 193, 7);
+    private static final Color DANGER_COLOR = new Color(220, 53, 69);
+    private static final Color HOVER_COLOR = new Color(248, 249, 250);
     
     public CodeColaGUI() {
         variables = new HashMap<>();
         recipeSteps = new ArrayList<>();
+        
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            // Fallback to default
+        }
+        
         initializeComponents();
         setupLayout();
         setupEventHandlers();
-        applyTheme("Light");
+        
+        setMinimumSize(new Dimension(800, 500));
+        // Changed from MAXIMIZED_BOTH to a smaller default size
+        setSize(1000, 600);
+        setLocationRelativeTo(null);
     }
     
     private void initializeComponents() {
-        setTitle("Code-Cola Pro - Java to Recipe Converter");
+        setTitle("CodeCola - Java to Recipe Converter");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 700);
-        setLocationRelativeTo(null);
+        setBackground(BG_COLOR);
         
-        // Initialize text areas with better default content
+        // Text areas with clean styling
         codeInput = new JTextArea(getDefaultCode());
         codeInput.setFont(new Font("Consolas", Font.PLAIN, 14));
         codeInput.setTabSize(4);
         codeInput.setLineWrap(false);
+        codeInput.setBorder(new EmptyBorder(15, 15, 15, 15));
+        codeInput.setBackground(PANEL_COLOR);
+        codeInput.setForeground(TEXT_COLOR);
+        codeInput.setCaretColor(TEXT_COLOR);
+        codeInput.setSelectionColor(new Color(0, 123, 255, 30));
         
         output = new JTextArea();
         output.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
+        output.setBorder(new EmptyBorder(15, 15, 15, 15));
+        output.setBackground(PANEL_COLOR);
+        output.setForeground(TEXT_COLOR);
+        output.setSelectionColor(new Color(0, 123, 255, 30));
         
-        // Initialize buttons with icons (using Unicode symbols)
-        convertButton = new JButton("🍹 In Rezept umwandeln");
-        convertButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        convertButton.setPreferredSize(new Dimension(200, 40));
+        // Clean, minimal buttons
+        convertButton = new MinimalButton("Convert to Recipe", PRIMARY_COLOR);
+        convertButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        convertButton.setPreferredSize(new Dimension(160, 36));
         
-        clearButton = new JButton("🗑️ Löschen");
-        clearButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        clearButton = new MinimalButton("Clear", DANGER_COLOR);
+        clearButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        clearButton.setPreferredSize(new Dimension(80, 36));
         
-        loadExampleButton = new JButton("📝 Beispiel laden");
-        loadExampleButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        loadExampleButton = new MinimalButton("Example", SUCCESS_COLOR);
+        loadExampleButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        loadExampleButton.setPreferredSize(new Dimension(120, 36));
         
-        // Theme selector
-        themeComboBox = new JComboBox<>(new String[]{"Light", "Dark"});
-        themeComboBox.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        
-        // Status components
-        statusLabel = new JLabel("Bereit");
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        // Simple status components
+        statusLabel = new JLabel("Ready");
+        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        statusLabel.setForeground(SECONDARY_TEXT);
         
         progressBar = new JProgressBar();
-        progressBar.setStringPainted(true);
+        progressBar.setStringPainted(false);
         progressBar.setVisible(false);
+        progressBar.setPreferredSize(new Dimension(200, 4));
+        progressBar.setBorderPainted(false);
+        progressBar.setBackground(BORDER_COLOR);
+        progressBar.setForeground(PRIMARY_COLOR);
     }
     
     private void setupLayout() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout());
         
-        // Main panel with padding
-        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        // Main container
+        JPanel mainContainer = new JPanel(new BorderLayout(0, 20));
+        mainContainer.setBackground(BG_COLOR);
+        mainContainer.setBorder(new EmptyBorder(20, 20, 20, 20));
         
-        // Top panel with controls
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topPanel.add(new JLabel("Theme:"));
-        topPanel.add(themeComboBox);
-        topPanel.add(Box.createHorizontalStrut(20));
-        topPanel.add(loadExampleButton);
-        topPanel.add(clearButton);
+        // Header panel
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(BG_COLOR);
+        headerPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
         
-        // Input panel
+        // Title
+        JLabel titleLabel = new JLabel("CodeCola");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titleLabel.setForeground(TEXT_COLOR);
+        
+        JLabel subtitleLabel = new JLabel("Transform Java code into readable recipes");
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        subtitleLabel.setForeground(SECONDARY_TEXT);
+        
+        JPanel titlePanel = new JPanel(new BorderLayout(0, 5));
+        titlePanel.setBackground(BG_COLOR);
+        titlePanel.add(titleLabel, BorderLayout.NORTH);
+        titlePanel.add(subtitleLabel, BorderLayout.CENTER);
+        
+        // Control panel
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        controlPanel.setBackground(BG_COLOR);
+        controlPanel.add(loadExampleButton);
+        controlPanel.add(clearButton);
+        controlPanel.add(convertButton); // Added convert button to control panel
+        
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        headerPanel.add(controlPanel, BorderLayout.EAST);
+        
+        // Content panels with clean cards - SIDE BY SIDE layout
+        JPanel inputCard = new CleanCard("Java Code Input");
+        inputCard.setLayout(new BorderLayout());
+        
         JScrollPane inputScroll = new JScrollPane(codeInput);
-        inputScroll.setBorder(BorderFactory.createTitledBorder("Java-Code eingeben"));
-        inputScroll.setPreferredSize(new Dimension(880, 280));
+        inputScroll.setBorder(null);
+        inputScroll.setBackground(PANEL_COLOR);
+        inputScroll.getViewport().setBackground(PANEL_COLOR);
         
-        // Add line numbers to input
-        inputScroll.setRowHeaderView(new LineNumberPanel(codeInput));
-        
-        // Center panel with convert button
-        JPanel centerPanel = new JPanel(new FlowLayout());
-        centerPanel.add(convertButton);
+        inputCard.add(inputScroll, BorderLayout.CENTER);
         
         // Output panel
+        JPanel outputCard = new CleanCard("Recipe Output");
+        outputCard.setLayout(new BorderLayout());
+        
         JScrollPane outputScroll = new JScrollPane(output);
-        outputScroll.setBorder(BorderFactory.createTitledBorder("Rezept-Ausgabe"));
-        outputScroll.setPreferredSize(new Dimension(880, 280));
+        outputScroll.setBorder(null);
+        outputScroll.setBackground(PANEL_COLOR);
+        outputScroll.getViewport().setBackground(PANEL_COLOR);
         
-        // Bottom panel with status
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.add(statusLabel, BorderLayout.WEST);
-        bottomPanel.add(progressBar, BorderLayout.CENTER);
+        outputCard.add(outputScroll, BorderLayout.CENTER);
         
-        // Add components to main panel
-        mainPanel.add(topPanel, BorderLayout.NORTH);
-        mainPanel.add(inputScroll, BorderLayout.CENTER);
-        mainPanel.add(centerPanel, BorderLayout.SOUTH);
+        // Content layout - Changed from GridLayout(2, 1) to GridLayout(1, 2) for side-by-side
+        JPanel contentPanel = new JPanel(new GridLayout(1, 2, 15, 0));
+        contentPanel.setBackground(BG_COLOR);
+        contentPanel.add(inputCard);
+        contentPanel.add(outputCard);
         
-        // Split pane for input and output
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        splitPane.setTopComponent(mainPanel);
-        splitPane.setBottomComponent(outputScroll);
-        splitPane.setDividerLocation(400);
-        splitPane.setResizeWeight(0.6);
+        // Footer
+        JPanel footerPanel = new JPanel(new BorderLayout(10, 0));
+        footerPanel.setBackground(BG_COLOR);
+        footerPanel.setBorder(new EmptyBorder(10, 0, 0, 0));
+        footerPanel.add(statusLabel, BorderLayout.WEST);
+        footerPanel.add(progressBar, BorderLayout.CENTER);
         
-        add(splitPane, BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
+        // Assembly - Removed convert button panel since it's now in header
+        mainContainer.add(headerPanel, BorderLayout.NORTH);
+        mainContainer.add(contentPanel, BorderLayout.CENTER);
+        
+        add(mainContainer, BorderLayout.CENTER);
+        add(footerPanel, BorderLayout.SOUTH);
     }
     
     private void setupEventHandlers() {
         convertButton.addActionListener(e -> convertCodeWithProgress());
         clearButton.addActionListener(e -> clearAll());
         loadExampleButton.addActionListener(e -> loadExample());
-        themeComboBox.addActionListener(e -> applyTheme((String) themeComboBox.getSelectedItem()));
         
-        // Add keyboard shortcuts
+        // Keyboard shortcuts
         InputMap inputMap = getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = getRootPane().getActionMap();
         
@@ -165,7 +216,8 @@ class CodeColaGUI extends JFrame {
         progressBar.setVisible(true);
         progressBar.setIndeterminate(true);
         convertButton.setEnabled(false);
-        statusLabel.setText("Konvertiere Code...");
+        statusLabel.setText("Converting code...");
+        statusLabel.setForeground(WARNING_COLOR.darker());
         
         SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
             @Override
@@ -179,10 +231,13 @@ class CodeColaGUI extends JFrame {
                 try {
                     String result = get();
                     output.setText(result);
-                    statusLabel.setText("Konvertierung abgeschlossen - " + recipeSteps.size() + " Schritte gefunden");
+                    statusLabel.setText("Conversion completed - " + recipeSteps.size() + " steps found");
+                    statusLabel.setForeground(SUCCESS_COLOR.darker());
+                    
                 } catch (Exception e) {
-                    statusLabel.setText("Fehler bei der Konvertierung: " + e.getMessage());
-                    output.setText("Fehler bei der Konvertierung:\n" + e.getMessage());
+                    statusLabel.setText("Error during conversion");
+                    statusLabel.setForeground(DANGER_COLOR.darker());
+                    output.setText("Error during conversion:\n" + e.getMessage());
                 }
                 progressBar.setVisible(false);
                 convertButton.setEnabled(true);
@@ -197,8 +252,8 @@ class CodeColaGUI extends JFrame {
         recipeSteps.clear();
         
         StringBuilder recipe = new StringBuilder();
-        recipe.append("🍹 Code-Cola Rezept 🍹\n");
-        recipe.append("=" .repeat(30)).append("\n\n");
+        recipe.append("Recipe Generated from Code\n");
+        recipe.append("=".repeat(35)).append("\n\n");
         
         String[] lines = code.split("\n");
         int stepNumber = 1;
@@ -217,12 +272,15 @@ class CodeColaGUI extends JFrame {
         }
         
         if (recipeSteps.isEmpty()) {
-            recipe.append("⚠️ Keine verwertbaren Anweisungen gefunden!\n");
-            recipe.append("Stelle sicher, dass dein Code Java-Syntax verwendet.\n");
+            recipe.append("No convertible instructions found!\n");
+            recipe.append("Make sure your code uses Java syntax.\n");
         } else {
-            recipe.append("\n🎉 Fertig ist dein Code-Cola!\n");
-            recipe.append("Gefundene Zutaten: ").append(variables.size()).append("\n");
-            recipe.append("Verarbeitete Schritte: ").append(recipeSteps.size()).append("\n");
+            recipe.append("\nRecipe completed!\n");
+            recipe.append("=".repeat(35)).append("\n");
+            recipe.append("Statistics:\n");
+            recipe.append("   - Ingredients found: ").append(variables.size()).append("\n");
+            recipe.append("   - Processing steps: ").append(recipeSteps.size()).append("\n");
+            recipe.append("   - Estimated time: ").append(recipeSteps.size() * 2).append(" minutes\n");
         }
         
         return recipe.toString();
@@ -230,36 +288,28 @@ class CodeColaGUI extends JFrame {
     
     private String parseLine(String line, int lineNumber) {
         try {
-            // Variable declarations
             if (line.matches("(int|double|float|long)\\s+\\w+\\s*=\\s*[\\d.]+;")) {
                 return parseNumericVariable(line);
             } else if (line.matches("String\\s+\\w+\\s*=\\s*\"[^\"]*\";")) {
                 return parseStringVariable(line);
             } else if (line.matches("boolean\\s+\\w+\\s*=\\s*(true|false);")) {
                 return parseBooleanVariable(line);
-            }
-            // Method calls
-            else if (line.matches("\\w+\\([^)]*\\);")) {
+            } else if (line.matches("\\w+\\([^)]*\\);")) {
                 return parseMethodCall(line);
-            }
-            // Control structures
-            else if (line.matches("if\\s*\\([^)]+\\)\\s*\\{?")) {
+            } else if (line.matches("if\\s*\\([^)]+\\)\\s*\\{?")) {
                 return parseIfStatement(line);
             } else if (line.matches("for\\s*\\([^)]+\\)\\s*\\{?")) {
                 return parseForLoop(line);
             } else if (line.matches("while\\s*\\([^)]+\\)\\s*\\{?")) {
                 return parseWhileLoop(line);
-            }
-            // Class and method definitions
-            else if (line.contains("class ")) {
+            } else if (line.contains("class ")) {
                 return parseClassDefinition(line);
             } else if (line.matches("(public|private|protected)?\\s*(static)?\\s*\\w+\\s+\\w+\\([^)]*\\)\\s*\\{?")) {
                 return parseMethodDefinition(line);
             }
         } catch (Exception e) {
-            return "⚠️ Fehler in Zeile " + lineNumber + ": " + e.getMessage();
+            return "Error in line " + lineNumber + ": " + e.getMessage();
         }
-        
         return "";
     }
     
@@ -273,7 +323,7 @@ class CodeColaGUI extends JFrame {
             variables.put(name, value);
             
             String unit = getUnitForVariable(name, type);
-            return String.format("Bereite %s %s %s vor", value, unit, name);
+            return String.format("Prepare %s %s %s", value, unit, name);
         }
         return "";
     }
@@ -285,7 +335,7 @@ class CodeColaGUI extends JFrame {
             String name = matcher.group(1);
             String value = matcher.group(2);
             variables.put(name, value);
-            return String.format("Wähle \"%s\" als %s", value, name);
+            return String.format("Select \"%s\" as %s", value, name);
         }
         return "";
     }
@@ -297,7 +347,7 @@ class CodeColaGUI extends JFrame {
             String name = matcher.group(1);
             String value = matcher.group(2);
             variables.put(name, value);
-            return String.format("Setze %s auf %s", name, value.equals("true") ? "an" : "aus");
+            return String.format("Set %s to %s", name, value.equals("true") ? "on" : "off");
         }
         return "";
     }
@@ -311,26 +361,20 @@ class CodeColaGUI extends JFrame {
             
             switch (method.toLowerCase()) {
                 case "boil":
-                case "erhitzen":
-                    return String.format("Erhitze %s", formatArguments(args));
+                    return String.format("Heat %s", formatArguments(args));
                 case "mix":
-                case "mischen":
-                    return String.format("Mische %s", formatArguments(args));
+                    return String.format("Mix %s", formatArguments(args));
                 case "add":
-                case "hinzufuegen":
                 case "addflavor":
-                    return String.format("Füge %s hinzu", formatArguments(args));
+                    return String.format("Add %s", formatArguments(args));
                 case "serve":
-                case "servieren":
-                    return String.format("Serviere %s", formatArguments(args));
+                    return String.format("Serve %s", formatArguments(args));
                 case "wait":
-                case "warten":
-                    return String.format("Warte %s", formatArguments(args));
+                    return String.format("Wait %s", formatArguments(args));
                 case "stir":
-                case "ruehren":
-                    return String.format("Rühre %s um", formatArguments(args));
+                    return String.format("Stir %s", formatArguments(args));
                 default:
-                    return String.format("Führe %s mit %s aus", method, formatArguments(args));
+                    return String.format("Execute %s with %s", method, formatArguments(args));
             }
         }
         return "";
@@ -341,13 +385,13 @@ class CodeColaGUI extends JFrame {
         Matcher matcher = pattern.matcher(line);
         if (matcher.find()) {
             String condition = matcher.group(1);
-            return String.format("Falls %s, dann:", condition);
+            return String.format("If %s, then:", condition);
         }
         return "";
     }
     
     private String parseForLoop(String line) {
-        return "Wiederhole die folgenden Schritte:";
+        return "Repeat the following steps:";
     }
     
     private String parseWhileLoop(String line) {
@@ -355,7 +399,7 @@ class CodeColaGUI extends JFrame {
         Matcher matcher = pattern.matcher(line);
         if (matcher.find()) {
             String condition = matcher.group(1);
-            return String.format("Solange %s, wiederhole:", condition);
+            return String.format("While %s, repeat:", condition);
         }
         return "";
     }
@@ -365,7 +409,7 @@ class CodeColaGUI extends JFrame {
         Matcher matcher = pattern.matcher(line);
         if (matcher.find()) {
             String className = matcher.group(1);
-            return String.format("📋 Starte Rezept: %s", className);
+            return String.format("Start recipe: %s", className);
         }
         return "";
     }
@@ -376,7 +420,7 @@ class CodeColaGUI extends JFrame {
         if (matcher.find()) {
             String methodName = matcher.group(1);
             if (!methodName.equals("main")) {
-                return String.format("🔧 Definiere Arbeitsschritt: %s", methodName);
+                return String.format("Define process: %s", methodName);
             }
         }
         return "";
@@ -384,42 +428,38 @@ class CodeColaGUI extends JFrame {
     
     private String formatArguments(String args) {
         if (args.trim().isEmpty()) {
-            return "alles";
+            return "everything";
         }
         
-        // Replace variable names with their values if known
         for (Map.Entry<String, String> entry : variables.entrySet()) {
             args = args.replace(entry.getKey(), entry.getValue());
         }
         
-        // Remove quotes from string literals
         args = args.replaceAll("\"", "");
-        
         return args;
     }
     
     private String getUnitForVariable(String name, String type) {
         String lowerName = name.toLowerCase();
-        if (lowerName.contains("water") || lowerName.contains("wasser") || 
-            lowerName.contains("liquid") || lowerName.contains("fluessigkeit")) {
+        if (lowerName.contains("water") || lowerName.contains("liquid")) {
             return "ml";
-        } else if (lowerName.contains("sugar") || lowerName.contains("zucker") || 
-                   lowerName.contains("salt") || lowerName.contains("salz")) {
+        } else if (lowerName.contains("sugar") || lowerName.contains("salt")) {
             return "g";
-        } else if (lowerName.contains("temp") || lowerName.contains("grad")) {
+        } else if (lowerName.contains("temp")) {
             return "°C";
-        } else if (lowerName.contains("time") || lowerName.contains("zeit")) {
-            return "Minuten";
+        } else if (lowerName.contains("time")) {
+            return "minutes";
         }
-        return type.equals("int") || type.equals("double") ? "Einheiten" : "";
+        return type.equals("int") || type.equals("double") ? "units" : "";
     }
     
     private void clearAll() {
         int result = JOptionPane.showConfirmDialog(
             this,
-            "Möchten Sie wirklich alles löschen?",
-            "Bestätigung",
-            JOptionPane.YES_NO_OPTION
+            "Do you really want to clear everything?",
+            "Confirmation",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
         );
         
         if (result == JOptionPane.YES_OPTION) {
@@ -427,22 +467,23 @@ class CodeColaGUI extends JFrame {
             output.setText("");
             variables.clear();
             recipeSteps.clear();
-            statusLabel.setText("Bereit");
+            statusLabel.setText("Ready");
+            statusLabel.setForeground(SECONDARY_TEXT);
         }
     }
     
     private void loadExample() {
         String[] examples = {
-            "Einfaches Beispiel",
-            "Erweiterte Cola",
-            "Cocktail Rezept",
-            "Kaffee Zubereitung"
+            "Simple Example",
+            "Advanced Cola",
+            "Cocktail Recipe",
+            "Coffee Preparation"
         };
         
         String choice = (String) JOptionPane.showInputDialog(
             this,
-            "Wählen Sie ein Beispiel:",
-            "Beispiel laden",
+            "Select an example:",
+            "Load Example",
             JOptionPane.QUESTION_MESSAGE,
             null,
             examples,
@@ -451,69 +492,45 @@ class CodeColaGUI extends JFrame {
         
         if (choice != null) {
             switch (choice) {
-                case "Einfaches Beispiel":
+                case "Simple Example":
                     codeInput.setText(getDefaultCode());
                     break;
-                case "Erweiterte Cola":
+                case "Advanced Cola":
                     codeInput.setText(getAdvancedColaCode());
                     break;
-                case "Cocktail Rezept":
+                case "Cocktail Recipe":
                     codeInput.setText(getCocktailCode());
                     break;
-                case "Kaffee Zubereitung":
+                case "Coffee Preparation":
                     codeInput.setText(getCoffeeCode());
                     break;
             }
-            statusLabel.setText("Beispiel geladen: " + choice);
+            statusLabel.setText("Example loaded: " + choice);
+            statusLabel.setForeground(SUCCESS_COLOR.darker());
         }
-    }
-    
-    private void applyTheme(String theme) {
-        Color bgColor, fgColor;
-        
-        if ("Dark".equals(theme)) {
-            bgColor = DARK_BG;
-            fgColor = DARK_FG;
-        } else {
-            bgColor = LIGHT_BG;
-            fgColor = LIGHT_FG;
-        }
-        
-        codeInput.setBackground(bgColor);
-        codeInput.setForeground(fgColor);
-        codeInput.setCaretColor(fgColor);
-        
-        output.setBackground(bgColor);
-        output.setForeground(fgColor);
-        
-        getContentPane().setBackground(bgColor);
-        
-        // Update button colors
-        convertButton.setBackground(ACCENT_COLOR);
-        convertButton.setForeground(Color.WHITE);
     }
     
     private void showHelp() {
         String helpText = """
-            Code-Cola Pro - Hilfe
+            CodeCola - Help
             
-            Tastenkürzel:
-            F5 - Code konvertieren
-            F1 - Diese Hilfe anzeigen
+            Keyboard Shortcuts:
+            • F5 - Convert code
+            • F1 - Show this help
             
-            Unterstützte Java-Konstrukte:
-            • Variablen (int, double, String, boolean)
-            • Methodenaufrufe
-            • Kontrollstrukturen (if, for, while)
-            • Klassen- und Methodendefinitionen
+            Supported Java Constructs:
+            • Variables (int, double, String, boolean)
+            • Method calls
+            • Control structures (if, for, while)
+            • Class and method definitions
             
-            Tipps:
-            • Verwende aussagekräftige Variablennamen
-            • Nutze Methodennamen wie 'boil', 'mix', 'add'
-            • Kommentare werden ignoriert
+            Tips:
+            • Use descriptive variable names
+            • Use method names like 'boil', 'mix', 'add'
+            • Comments are intelligently ignored
             """;
         
-        JOptionPane.showMessageDialog(this, helpText, "Hilfe", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, helpText, "CodeCola Help", JOptionPane.INFORMATION_MESSAGE);
     }
     
     private String getDefaultCode() {
@@ -616,37 +633,110 @@ class CodeColaGUI extends JFrame {
             }""";
     }
     
-    // Simple line number panel
-    private static class LineNumberPanel extends JPanel {
-        private JTextArea textArea;
+    // Minimal button with clean design
+    private static class MinimalButton extends JButton {
+        private Color buttonColor;
+        private boolean isHovered = false;
         
-        public LineNumberPanel(JTextArea textArea) {
-            this.textArea = textArea;
-            setPreferredSize(new Dimension(50, 0));
-            setBackground(new Color(240, 240, 240));
+        public MinimalButton(String text, Color color) {
+            super(text);
+            this.buttonColor = color;
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setBorder(new EmptyBorder(8, 16, 8, 16));
+            setForeground(Color.WHITE);
+            
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    isHovered = true;
+                    setCursor(new Cursor(Cursor.HAND_CURSOR));
+                    repaint();
+                }
+                
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    isHovered = false;
+                    setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                    repaint();
+                }
+            });
+        }
+        
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            int width = getWidth();
+            int height = getHeight();
+            
+            Color bgColor = buttonColor;
+            if (isHovered) {
+                bgColor = buttonColor.brighter();
+            }
+            if (getModel().isPressed()) {
+                bgColor = buttonColor.darker();
+            }
+            
+            g2.setColor(bgColor);
+            g2.fill(new RoundRectangle2D.Float(0, 0, width, height, 6, 6));
+            
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+    
+    // Clean card component with minimal styling
+    private static class CleanCard extends JPanel {
+        private String title;
+        
+        public CleanCard(String title) {
+            this.title = title;
+            setBackground(PANEL_COLOR);
+            setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(BORDER_COLOR, 1),
+                new EmptyBorder(15, 15, 15, 15)
+            ));
         }
         
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            g.setColor(Color.GRAY);
-            g.setFont(new Font("Monospaced", Font.PLAIN, 12));
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            FontMetrics fm = g.getFontMetrics();
-            int lineHeight = fm.getHeight();
-            int lines = textArea.getLineCount();
+            // Title
+            g2.setColor(TEXT_COLOR);
+            g2.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            FontMetrics fm = g2.getFontMetrics();
+            g2.drawString(title, 15, fm.getAscent() + 5);
             
-            for (int i = 1; i <= lines; i++) {
-                String lineNumber = String.valueOf(i);
-                int x = getWidth() - fm.stringWidth(lineNumber) - 5;
-                int y = i * lineHeight - 2;
-                g.drawString(lineNumber, x, y);
-            }
+            // Underline
+            g2.setColor(BORDER_COLOR);
+            g2.drawLine(15, fm.getHeight() + 8, getWidth() - 15, fm.getHeight() + 8);
+            
+            g2.dispose();
+        }
+        
+        @Override
+        public Insets getInsets() {
+            return new Insets(35, 15, 15, 15);
         }
     }
     
     public static void main(String[] args) {
+        System.setProperty("awt.useSystemAAFontSettings", "on");
+        System.setProperty("swing.aatext", "true");
+        
         SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                // Use default if system look and feel is not available
+            }
+            
             new CodeColaGUI().setVisible(true);
         });
     }
