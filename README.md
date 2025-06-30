@@ -23,7 +23,7 @@
   <a href="#-faq"><b>❓ FAQ</b></a>
 </p>
 <hr>
-<img align="right" src="md/icon.png" width="150">
+<img align="right" src="md/cola.png" width="150">
 
 ## 💡 About CodeCola
 CodeCola is a creative Java project that transforms basic Java code snippets into step-by-step drink recipes. It's especially designed for beginners or anyone who enjoys a more visual and playful interpretation of programming logic.
