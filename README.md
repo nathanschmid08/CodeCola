@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="md/font.png" alt="Code Cola"> 
+  <img src="md/font.png" alt="Code Cola" width="700px"> 
 </h1>
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Active-yellow" alt="Status">
@@ -19,14 +19,14 @@
   <a href="#-example"><b>📸 Example</b></a> •
   <a href="#-getting-started"><b>🚀 Getting Started</b></a> •
   <a href="#-built-in-examples"><b>📂 Examples</b></a> •
-  <a href="#-supported-java-syntax"><b>🧭 Syntax</b></a>
+  <a href="#-supported-java-syntax"><b>🧭 Syntax</b></a> •
+  <a href="#-faq"><b>❓ FAQ</b></a>
 </p>
 <hr>
-<!--<img align="right" src="md/font.png" width="150">-->
+<img align="right" src="md/icon.png" width="150">
 
 ## 💡 About CodeCola
 CodeCola is a creative Java project that transforms basic Java code snippets into step-by-step drink recipes. It's especially designed for beginners or anyone who enjoys a more visual and playful interpretation of programming logic.
-
 > ☕ Perfect for making programming concepts more digestible and fun!
 
 <hr>
@@ -72,7 +72,6 @@ if (carbonated) {
 }
 serve();
 ```
-
 ### Recipe Output
 ```yaml
 Prepare 200 ml water  
@@ -93,6 +92,12 @@ Serve everything
 ### Requirements
 - Java 17 or newer
 - Any IDE (IntelliJ, Eclipse) or terminal with javac and java
+
+### Installation
+```bash
+git clone https://github.com/yourusername/codecola.git
+cd codecola
+```
 
 ### Run
 ```bash
@@ -130,6 +135,27 @@ Choose from several sample "recipes":
     <td>Class and method definitions for recipe steps</td>
   </tr>
 </table>
+
+<hr>
+
+## 🤝 Contributing
+We welcome contributions! Here's how you can help:
+- 🐛 Report bugs by opening an [issue](../../issues)
+- 💡 Suggest new features or improvements
+- 🔧 Submit pull requests with enhancements
+- 📚 Help improve documentation
+
+### Development Setup
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/my-feature`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature/my-feature`
+5. Open a pull request
+
+<hr>
+
+## 📄 License
+This project is licensed under the BEERWARE License - see the [LICENSE](LICENSE) file for details.
 
 <hr>
 
